@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/static/css/font-awesome.css">
   <link rel="stylesheet" href="/static/css/flags.css">
   <link rel="stylesheet" href="/static/css/app.css">
+  <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
 </head>
 <body>
   <div class="main col-md-6 col-md-offset-3">
@@ -27,14 +28,24 @@
         <ul id="rooms" class="list-group"></ul>
         <ul id="people" class="list-group"></ul>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-8">
         <div id="conversation">
           <ul id="msgs" class="list-unstyled"></ul>
+        </div>
+		<div class="form-group">
+			<label class="col-md-4 control-label" for="selectbasic">Select Language</label>
+			<select id="lan_select" name="lan_select" class="form-control">
+				<option value="en">English</option>
+				<option value="bn">Bengali</option>
+				<option value="es">Spanish</option>
+				<option value="fr">French</option>
+			</select>
         </div>
         <form id="chatForm" class="form-inline">
           <div class="form-group">
             <input type="text" class="form-control input-lg" placeholder="Your message" id="msg">
-          </div>
+		  </div>
+		  
           <input type="submit" name="send" id="send" value="Send" class="btn btn-success btn-lg">
           <input type="button" name="start_button" id="start_button" value="Record" onclick="startButton(event)" class="btn btn-info btn-lg">
           <div class="btn-group">
@@ -54,7 +65,7 @@
       </div>
     </div>
   </div>
-
+  
   <!-- Modal start -->
   <div class="modal fade" id="roomModal" tabindex="-1" role="dialog" aria-labelledby="createRoomLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -80,6 +91,6 @@
   <script src="/static/js/jquery-migrate.js"></script>
   <script src="/static/js/bootstrap.js"></script>
   <script src="/static/js/socket.io.js"></script>  
-  <script src="/static/js/client.js"></script>
+  <script src="/static/js/new.js"></script>
 </body>
 </html>

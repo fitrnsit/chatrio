@@ -181,12 +181,6 @@ io.sockets.on("connection", function (socket) {
                 fn({people: people});
         });
 
-	socket.on("countryUpdate", function(data) { //we know which country the user is from
-		country = data.country.toLowerCase();
-		people[socket.id].country = country;
-		io.sockets.emit("update-people", {people: people, count: sizePeople});
-	});
-
 	socket.on("typing", function(data) {
 		if (typeof people[socket.id] !== "undefined")
 			io.sockets.in(socket.room).emit("isTyping", {isTyping: data, person: people[socket.id].name});
