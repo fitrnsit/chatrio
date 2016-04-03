@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>PubRTC + Mobile</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/font-awesome.css" />
+	<style>
+		#vid-box{
+			display: inline-block;
+			text-align:center;
+			width:100%;
+		}
+		#vid-box video{
+			width:47%;
+		}
+	</style>	
+</head>
+<body>
+	<div class = "bodyDiv">
+
+		<div id="vid-box" class="video2"></div>
+		<div id="vid-thumb"></div>
+		<form name="loginForm" id="login" action="#" onsubmit="return errWrap(login,this);">
+			<span class="input input--nao">
+				<input class="input__field input__field--nao" type="text" name="username" id="username" placeholder="Enter A Username"/>
+					<label class="input__label input__label--nao" for="username">
+						<span class="input__label-content input__label-content--nao">                                          
+						</span>
+					</label>
+					<svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
+						<path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
+					</svg>
+			</span>
+				
+			<button class="cbutton cbutton--effect-radomir" type="submit" name="login_submit" value="Log In" id="username_add_btn" style="margin-top: 40px; margin-left:-10px">
+				<i class="cbutton__icon fa fa-fw fa fa-sign-in"></i>
+			</button>
+		</form>	
+		
+		<form name="callForm" id="call" action="#" onsubmit="return errWrap(makeCall,this);">
+			<span class="input input--nao">
+				<input class="input__field input__field--nao" type="text" name="number" id="call" placeholder="Enter User To Call!"/>
+						<label class="input__label input__label--nao" for="number">
+							<span class="input__label-content input__label-content--nao">                                          
+							</span>
+						</label>
+					<svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
+						<path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
+					</svg>
+			</span>
+			<button class="cbutton cbutton--effect-radomir md-trigger" type="submit" value="Call" style="margin-top: 40px; margin-left:-10px" data-modal="modal-13">
+				<i class="cbutton__icon fa fa-fw fa fa fa-phone-square"></i>
+			</button>
+		</form>
+		
+		<div id="inCall" class="ptext">
+			<button id="end" onclick="end()" >End</button> 
+			<button id="mute" onclick="mute()">Mute</button> 
+			<button id="pause" onclick="pause()">Pause</button>
+		</div>
+		
+		<div id="logs" class="ptext"></div>
+		<div>
+			<b>USERS</b>
+			<div id="users">
+			<p>Users Connected</p>
+			</div>
+		</div>
+		<div>
+			<div id="conversation"></div>
+			<input id="data">
+			<input type="button" id="datasend" value="send" />
+		</div>
+		<div id="info" hidden="true">
+		  <p id="info_speak_now">Speak now.</p>
+		  <p id="info_no_speech">No speech was detected. You may need to adjust your
+			<a href="//support.google.com/chrome/bin/answer.py?hl=en&amp;answer=1407892">
+			  microphone settings</a>.</p>
+		  <p id="info_no_microphone" style="display:none">
+			No microphone was found. Ensure that a microphone is installed and that
+			<a href="//support.google.com/chrome/bin/answer.py?hl=en&amp;answer=1407892">
+			microphone settings</a> are configured correctly.</p>
+		  <p id="info_allow">Click the "Allow" button above to enable your microphone.</p>
+		  <p id="info_denied">Permission to use microphone was denied.</p>
+		  <p id="info_blocked">Permission to use microphone is blocked. To change,
+			go to chrome://settings/contentExceptions#media-stream</p>
+		  <p id="info_upgrade">Web Speech API is not supported by this browser.
+			 Upgrade to <a href="//www.google.com/chrome">Chrome</a>
+			 version 25 or later.</p>
+		</div>
+		<div id="results">
+		  <span id="final_span" class="final"></span>
+		  <span id="interim_span" class="interim"></span>
+		  <p>
+		</div>
+		<div id="div_language">
+			<select id="select_language" onchange="updateCountry()"></select>
+			&nbsp;&nbsp;
+			<select id="select_dialect"></select>
+		</div>
+
+	<!-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+	<!-- WebRTC Peer Connections -->
+	<!-- =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+	<script src="static/js/jquery.js"></script>
+	<script src="static/js/pubnub.min.js"></script>
+	<script src="/static/js/webrtc.js"></script>
+	<script src="/static/js/socket.io.js"></script> 
+	<script src="/static/js/jquery-migrate.js"></script>
+	<script src="/static/js/new_2.js"></script>
+	<script src="/static/js/rtc-controller.js"></script>
+
+	<script type="text/javascript">
+
+	var video_out = document.getElementById("vid-box");
+	var vid_thumb = document.getElementById("vid-thumb");
+	var vidCount  = 0;
+		
+	function login(form) {
+		var phone = window.phone = PHONE({
+			number        : form.username.value || "Anonymous", // listen on username line else Anonymous
+			publish_key   : 'pub-c-561a7378-fa06-4c50-a331-5c0056d0163c', 
+			subscribe_key : 'sub-c-17b7db8a-3915-11e4-9868-02ee2ddab7fe', 
+		});
+		var ctrl = window.ctrl = CONTROLLER(phone);
+		ctrl.ready(function(){
+			form.username.style.background="#55ff5b"; 
+			form.login_submit.hidden="true"; 
+			ctrl.addLocalStream(vid_thumb);
+			addLog("Logged in as " + form.username.value); 
+		});
+		ctrl.receive(function(session){
+			session.connected(function(session){ video_out.appendChild(session.video); addLog(session.number + " has joined."); vidCount++; });
+			session.ended(function(session) { ctrl.getVideoElement(session.number).remove(); addLog(session.number + " has left.");    vidCount--;});
+		});
+		ctrl.videoToggled(function(session, isEnabled){
+			ctrl.getVideoElement(session.number).toggle(isEnabled);
+			addLog(session.number+": video enabled - " + isEnabled);
+		});
+		ctrl.audioToggled(function(session, isEnabled){
+			ctrl.getVideoElement(session.number).css("opacity",isEnabled ? 1 : 0.75);
+			addLog(session.number+": audio enabled - " + isEnabled);
+		});
+		return false;
+	}
+
+	function makeCall(form){
+		if (!window.phone) alert("Login First!");
+		var num = form.number.value;
+		if (phone.number()==num) return false; // No calling yourself!
+		ctrl.isOnline(num, function(isOn){
+			if (isOn) ctrl.dial(num);
+			else alert("User is Offline");
+		});
+		return false;
+	}
+
+	function mute(){
+		var audio = ctrl.toggleAudio();
+		if (!audio) $("#mute").html("Unmute");
+		else $("#mute").html("Mute");
+	}
+
+	function end(){
+		ctrl.hangup();
+	}
+
+	function pause(){
+		var video = ctrl.toggleVideo();
+		if (!video) $('#pause').html('Unpause'); 
+		else $('#pause').html('Pause'); 
+	}
+
+	function getVideo(number){
+		return $('*[data-number="'+number+'"]');
+	}
+
+	function addLog(log){
+		$('#logs').append("<p>"+log+"</p>");
+	}
+
+	function errWrap(fxn, form){
+		try {
+			return fxn(form);
+		} catch(err) {
+			alert("WebRTC is currently only supported by Chrome, Opera, and Firefox");
+			return false;
+		}
+	}
+
+	</script>
+
+	<!-- Meri Script -->
+	<script>
+	  $( document ).ready(function() {
+	   startButton(event);
+	   console.log("start");
+
+	});
+	</script>
+	<script>
+		var socket = io.connect();
+		var btn_user_name = document.getElementById("username_add_btn");
+		btn_user_name.addEventListener('click',startConnection);
+		var user_name;
+		function startConnection(){
+			user_name = document.getElementById("username").value;
+			socket.emit('adduser', user_name);
+		}
+
+		// listener, whenever the server emits 'updatechat', this updates the chat body
+		socket.on('updatechat', function (username, data) {
+			console.log(username + " se aaya inke liye " + user_name); 
+			if(username !== user_name){
+				var translateURL = "https://www.googleapis.com/language/translate/v2?key=AIzaSyCjWzv71A-rohf5ldmmNakD0J7xPlDhT8U&target=" + translateTo  +"&q=" + data;
+				var req = new XMLHttpRequest();
+				req.open("GET",translateURL,true)
+				req.responseType = "json";
+				req.send();
+				req.onreadystatechange = function(){
+					if(this.readyState===4){						
+						var translatedData = this.response.data.translations[0].translatedText;
+						final_span.innerHTML = username + " : " + translatedData + "<br>";
+					}
+				}
+			}
+		});
+
+		// listener, whenever the server emits 'updateusers', this updates the username list
+		socket.on('updateusers', function(data) {
+			$('#users').empty();
+			$.each(data, function(key, value) {
+				$('#users').append('<div>' + key + '</div>');
+			});
+		});
+
+		// on load of page
+		$(function(){
+			// when the client clicks SEND
+			$('#datasend').click( function() {
+				var message = $('#data').val();
+				$('#data').val('');
+				// tell server to execute 'sendchat' and send along one parameter
+				socket.emit('sendchat', message);
+			});
+
+			// when the client hits ENTER on their keyboard
+			$('#data').keypress(function(e) {
+				if(e.which == 13) {
+					$(this).blur();
+					$('#datasend').focus().click();
+				}
+			});
+		});
+	
+	/*
+	
+	*/
+	var langs =
+	[['Afrikaans',       ['af-ZA']],
+	 ['Bahasa Indonesia',['id-ID']],
+	 ['Bahasa Melayu',   ['ms-MY']],
+	 ['Català',          ['ca-ES']],
+	 ['Čeština',         ['cs-CZ']],
+	 ['Deutsch',         ['de-DE']],
+	 ['English',         ['en-AU', 'Australia'],
+						 ['en-CA', 'Canada'],
+						 ['en-IN', 'India'],
+						 ['en-NZ', 'New Zealand'],
+						 ['en-ZA', 'South Africa'],
+						 ['en-GB', 'United Kingdom'],
+						 ['en-US', 'United States']],
+	 ['Español',         ['es-AR', 'Argentina'],
+						 ['es-BO', 'Bolivia'],
+						 ['es-CL', 'Chile'],
+						 ['es-CO', 'Colombia'],
+						 ['es-CR', 'Costa Rica'],
+						 ['es-EC', 'Ecuador'],
+						 ['es-SV', 'El Salvador'],
+						 ['es-ES', 'España'],
+						 ['es-US', 'Estados Unidos'],
+						 ['es-GT', 'Guatemala'],
+						 ['es-HN', 'Honduras'],
+						 ['es-MX', 'México'],
+						 ['es-NI', 'Nicaragua'],
+						 ['es-PA', 'Panamá'],
+						 ['es-PY', 'Paraguay'],
+						 ['es-PE', 'Perú'],
+						 ['es-PR', 'Puerto Rico'],
+						 ['es-DO', 'República Dominicana'],
+						 ['es-UY', 'Uruguay'],
+						 ['es-VE', 'Venezuela']],
+	 ['Français',        ['fr-FR']],
+	 ['Galego',          ['gl-ES']],
+	 ['Hrvatski',        ['hr_HR']],
+	 ['Íslenska',        ['is-IS']],
+	 ['Italiano',        ['it-IT', 'Italia'],
+						 ['it-CH', 'Svizzera']],
+	 ['Nederlands',      ['nl-NL']],
+	 ['Polski',          ['pl-PL']],
+	 ['Português',       ['pt-BR', 'Brasil'],
+						 ['pt-PT', 'Portugal']],
+	 ['Română',          ['ro-RO']],
+	 ['Slovenčina',      ['sk-SK']],
+	 ['Suomi',           ['fi-FI']],
+	 ['Svenska',         ['sv-SE']],
+	 ['Türkçe',          ['tr-TR']],
+	 ['हिन्दी',            ['hi-IN']],
+	 ['Lingua latīna',   ['la']]];
+
+	for (var i = 0; i < langs.length; i++) {
+	  select_language.options[i] = new Option(langs[i][0], i);
+	}
+	select_language.selectedIndex = 6;
+	updateCountry();
+	select_dialect.selectedIndex = 2;
+	showInfo('info_start');
+	
+	var translateTo = "en";
+	
+	var recognizing = false;
+
+	function updateCountry() {
+	  for (var i = select_dialect.options.length - 1; i >= 0; i--) {
+		select_dialect.remove(i);
+	  }
+	  var list = langs[select_language.selectedIndex];
+	  for (var i = 1; i < list.length; i++) {
+		select_dialect.options.add(new Option(list[i][1], list[i][0]));
+	  }
+	  
+	  var basic_lang = list[1][0];
+	  basic_lang = basic_lang.split('-')[0];
+	  translateTo = basic_lang;
+	
+	  select_dialect.style.visibility = list[1].length == 1 ? 'hidden' : 'visible';
+	  if(recognizing)
+	  {
+		recognition.stop();
+		recognizing = false;
+		startButton(event);
+	  }
+	}
+
+	var final_transcript = '';
+	var ignore_onend;
+	var start_timestamp;
+	if (!('webkitSpeechRecognition' in window)) {
+	  upgrade();
+	} else {
+	  var recognition = new webkitSpeechRecognition();
+	  recognition.continuous = true;
+	  recognition.interimResults = true;
+	  recognition.maxAlternatives = 0;
+	  console.log(recognition);
+	  recognition.onstart = function() {
+		recognizing = true;
+		showInfo('info_speak_now');
+	  };
+
+	  recognition.onerror = function(event) {
+		if (event.error == 'no-speech') {
+		  showInfo('info_no_speech');
+		  ignore_onend = true;
+		}
+		if (event.error == 'audio-capture') {
+		  showInfo('info_no_microphone');
+		  ignore_onend = true;
+		}
+		if (event.error == 'not-allowed') {
+		  if (event.timeStamp - start_timestamp < 100) {
+			showInfo('info_blocked');
+		  } else {
+			showInfo('info_denied');
+		  }
+		  ignore_onend = true;
+		}
+	  };
+
+	  recognition.onend = function() {
+		startButton(event);
+		recognizing = false;
+		if (ignore_onend) {
+		}
+		if (!final_transcript) {
+		  showInfo('info_start');
+		  return;
+		}
+		showInfo('');
+		if (window.getSelection) {
+		  window.getSelection().removeAllRanges();
+		  var range = document.createRange();
+		  range.selectNode(document.getElementById('final_span'));
+		  window.getSelection().addRange(range);
+		}
+	  };
+
+	  recognition.onresult = function(event) {
+		//setTimeout(function(){ resetSpan(); }, 7000);
+		var interim_transcript = '';
+		for (var i = event.resultIndex; i < event.results.length; ++i) {
+		  if (event.results[i].isFinal) {
+			final_transcript = event.results[i][0].transcript;
+		  } else {
+			interim_transcript = event.results[i][0].transcript;
+		  }
+		}
+		final_transcript = capitalize(final_transcript);
+		console.log(final_transcript);
+		final_span = " ";
+		socket.emit('sendchat', final_transcript);
+		
+		//final_span.innerHTML = linebreak(final_transcript);
+		//interim_span.innerHTML = linebreak(interim_transcript);
+		if (final_transcript || interim_transcript) {
+		}
+	  };
+	}
+
+	function resetSpan() {
+
+		final_transcript = '';
+		interim_transcript = '';
+		final_span.innerHTML = '';
+		interim_span.innerHTML = '';
+	}
+
+	function upgrade() {
+	  start_button.style.visibility = 'hidden';
+	  showInfo('info_upgrade');
+	}
+
+	var two_line = /\n\n/g;
+	var one_line = /\n/g;
+	function linebreak(s) {
+	  return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
+	}
+
+	var first_char = /\S/;
+	function capitalize(s) {
+	  return s.replace(first_char, function(m) { return m.toUpperCase(); });
+	}
+
+	function startButton(event) {
+	  if (recognizing) {
+		recognition.stop();
+		recognition.lang = select_dialect.value;
+		recognition.start();
+		return;
+	  }
+	  final_transcript += ' ';
+	  recognition.lang = select_dialect.value;
+	  recognition.start();
+	  ignore_onend = false;
+	  final_span.innerHTML += ' ';
+	  interim_span.innerHTML += ' ';
+	  showInfo('info_allow');
+	  start_timestamp = event.timeStamp;
+	}
+
+	function showInfo(s) {
+	  if (s) {
+		for (var child = info.firstChild; child; child = child.nextSibling) {
+		  if (child.style) {
+			child.style.display = child.id == s ? 'inline' : 'none';
+		  }
+		}
+		info.style.visibility = 'visible';
+	  } else {
+		info.style.visibility = 'hidden';
+	  }
+	}
+
+	</script>
+	</div>
+</body>
+</html>

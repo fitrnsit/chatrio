@@ -176,7 +176,7 @@ $(document).ready(function() {
   socket.on("isTyping", function(data) {
     if (data.isTyping) {
       if ($("#"+data.person+"").length === 0) {
-        $("#updates").append("<li id='"+ data.person +"'><span class='text-muted'><small><i class='fa fa-keyboard-o'></i> " + data.person + " is typing.</small></li>");
+        $("#updates").append("<li id='"+ data.person +"'><span class='text-muted'><small> " + data.person + " is typing.</small></li>");
         timeout = setTimeout(timeoutFunction, 5000);
       }
     } else {
@@ -266,7 +266,7 @@ socket.on("history", function(data) {
       } else {
         html = "<img class=\"flag flag-"+obj.country+"\"/>";
       }
-      $('#people').append("<li class=\"list-group-item\"><span>" + obj.name + "</span> <i class=\"fa fa-"+obj.device+"\"></i> " + html + " <a href=\"#\" class=\"whisper btn btn-xs\">whisper</a></li>");
+      $('#people').append("<li class=\"list-group-item\"><span>" + obj.name + "</span>" + html + " <a href=\"#\" class=\"whisper btn btn-xs\">whisper</a></li>");
       //peopleOnline.push(obj.name);
     });
 
@@ -282,6 +282,15 @@ socket.on("history", function(data) {
 	req.onreadystatechange = function(){
 		if(this.readyState === 4){
 			var newMsg = this.response.data.translations[0].translatedText;
+			//msTime = timeFormat(msTime);
+			perName = person.name;
+			idGiven =  msTime + perName;
+			idGiven = idGiven.replace(' ','');
+			$("#msgs").append("<li><strong><span class='text-success'>" + timeFormat(msTime) + person.name + "</span></strong>: " + newMsg + "<i class='em' id='"+ idGiven +"'></i>"+"</li>");
+			//clear typing field
+			$("#"+person.name+"").remove();
+			clearTimeout(timeout);
+			timeout = setTimeout(timeoutFunction, 0);			
 			console.log(newMsg);
 			var translateURL2 = "https://www.googleapis.com/language/translate/v2?key=AIzaSyCjWzv71A-rohf5ldmmNakD0J7xPlDhT8U&target=en&q=" + msg;
 			var req2 = new XMLHttpRequest();
@@ -334,13 +343,11 @@ socket.on("history", function(data) {
 									if(emo_sentiment === "very-positive"){
 										emo_sentiment = "em-grinning";
 									}
-									
-									
-									$("#msgs").append("<li><strong><span class='text-success'>" + timeFormat(msTime) + person.name + "</span></strong>: " + newMsg + "<i class='em "+ emo_sentiment +"'></i>"+"</li>");
-									//clear typing field
-									$("#"+person.name+"").remove();
-									clearTimeout(timeout);
-									timeout = setTimeout(timeoutFunction, 0);
+									var idOfMsg = String(idGiven);
+									console.log(idGiven);
+									var bs = $("i#" + idOfMsg)[0];
+									console.log(bs);
+									bs.classList.add(emo_sentiment);
 								}
 							}
 						}

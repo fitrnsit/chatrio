@@ -23,7 +23,7 @@ app.get('/', function(req, res) {
   res.render('index.ejs');
 });
 
-server.listen(app.get('port'), app.get('ipaddr'), function(){
+server.listen(app.get('port'), function(){
 	console.log('Express server listening on  IP: ' + app.get('ipaddr') + ' and port ' + app.get('port'));
 });
 
@@ -180,12 +180,6 @@ io.sockets.on("connection", function (socket) {
 	socket.on("getOnlinePeople", function(fn) {
                 fn({people: people});
         });
-
-	socket.on("countryUpdate", function(data) { //we know which country the user is from
-		country = data.country.toLowerCase();
-		people[socket.id].country = country;
-		io.sockets.emit("update-people", {people: people, count: sizePeople});
-	});
 
 	socket.on("typing", function(data) {
 		if (typeof people[socket.id] !== "undefined")
