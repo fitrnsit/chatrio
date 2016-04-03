@@ -215,7 +215,7 @@
 		socket.on('updatechat', function (username, data) {
 			console.log(username + " se aaya inke liye " + user_name); 
 			if(username !== user_name){
-				var translateURL = "https://www.googleapis.com/language/translate/v2?key=AIzaSyCjWzv71A-rohf5ldmmNakD0J7xPlDhT8U&target=" + translateTo  +"&q=" + data;
+				var translateURL = "https://www.googleapis.com/language/translate/v2?key=KEY&target=" + translateTo  +"&q=" + data;
 				var req = new XMLHttpRequest();
 				req.open("GET",translateURL,true)
 				req.responseType = "json";
