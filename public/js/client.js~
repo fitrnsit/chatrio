@@ -274,7 +274,7 @@ socket.on("history", function(data) {
 
   socket.on("chat", function(msTime, person, msg) {
     console.log(msg);
-	var translateURL = "https://www.googleapis.com/language/translate/v2?key=KEY&target=" + language_client  +"&q=" + msg;
+	var translateURL = "https://www.googleapis.com/language/translate/v2?key=AIzaSyCjWzv71A-rohf5ldmmNakD0J7xPlDhT8U&target=" + language_client  +"&q=" + msg;
 	var req = new XMLHttpRequest();
 	req.open("GET",translateURL,true)
 	req.responseType = "json";
@@ -283,7 +283,7 @@ socket.on("history", function(data) {
 		if(this.readyState === 4){
 			var newMsg = this.response.data.translations[0].translatedText;
 			console.log(newMsg);
-			var translateURL2 = "https://www.googleapis.com/language/translate/v2?key=KEY&target=en&q=" + msg;
+			var translateURL2 = "https://www.googleapis.com/language/translate/v2?key=AIzaSyCjWzv71A-rohf5ldmmNakD0J7xPlDhT8U&target=en&q=" + msg;
 			var req2 = new XMLHttpRequest();
 			req2.open("GET",translateURL2,true)
 			req2.responseType = "json";
@@ -294,7 +294,7 @@ socket.on("history", function(data) {
 					console.log(msg2);
 					msg2 = msg2.toLowerCase();
 					msg2 = escape(msg2);
-					var emotionURL_1 = "https://api.havenondemand.com/1/api/async/analyzesentiment/v1?text=" + msg2 + "&language=eng&apikey=" + "KEY"
+					var emotionURL_1 = "https://api.havenondemand.com/1/api/async/analyzesentiment/v1?text=" + msg2 + "&language=eng&apikey=" + "28ab51e3-5d54-446d-ae55-fe0ee836f65b"
 					var re3 = new XMLHttpRequest();
 					re3.open("GET",emotionURL_1,true);
 					re3.responseType = 'json';
@@ -302,7 +302,7 @@ socket.on("history", function(data) {
 					re3.onreadystatechange = function(){
 						if(re3.readyState===4){
 							var jobId = re3.response.jobID;
-							var emotionURL_2 = "https://api.havenondemand.com/1/job/result/" + jobId + "?apikey=" + "KEY";
+							var emotionURL_2 = "https://api.havenondemand.com/1/job/result/" + jobId + "?apikey=" + "28ab51e3-5d54-446d-ae55-fe0ee836f65b";
 							var re4 = new XMLHttpRequest();
 							re4.open("GET",emotionURL_2,true);
 							re4.responseType = 'json';
