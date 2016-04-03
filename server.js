@@ -5,16 +5,13 @@ var express = require('express')
 , npid = require("npid")
 , uuid = require('node-uuid')
 , Room = require('./room.js')
+, bodyparser = require('body-parser')
 , _ = require('underscore')._;
 
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
-
-app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3000);
-app.set('ipaddr', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
+app.set('port', 3000);
+app.set('ipaddr', "127.0.0.1");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(methodOverride());
 app.use('/static', express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views','views');
@@ -24,7 +21,7 @@ app.get('/', function(req, res) {
 });
 
 server.listen(app.get('port'), function(){
-	console.log('Express server listening on  IP: ' + app.get('ipaddr') + ' and port ' + app.get('port'));
+	console.log('Express server listening on ' + "localhost" + ' and port ' + app.get('port'));
 });
 
 io.set("log level", 1);
